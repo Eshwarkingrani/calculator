@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator by Eshwar Kingrani</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .mode-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .calculator-container {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 500px;
+            width: 100%;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        body.dark .calculator-container {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .mode-btn.active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.05);
+        }
+
+        .display {
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 2rem;
+            color: white;
+            font-weight: 300;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .display.calculating::before {
+            left: 100%;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .scientific-buttons {
+            display: none;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .scientific-buttons.show {
+            display: grid;
+        }
+
+        .btn {
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn.operator {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+
+        .btn.equals {
+            background: linear-gradient(135deg, #00d2d3, #54a0ff);
+            grid-column: span 2;
+        }
+
+        .btn.clear {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        }
+
+        .equation-solver {
+            display: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .equation-solver.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .equation-input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .equation-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .solve-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: #333;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .solve-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn.animate {
+            animation: pulse 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .calculator-container {
+                padding: 20px;
+            }
+            
+            .btn {
+                padding: 15px;
+                font-size: 1rem;
+            }
+            
+            .display {
+                font-size: 1.5rem;
+                min-height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Calculator by Eshwar Kingrani</h1>
+        <button class="mode-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
+    <div class="calculator-container">
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('basic')">Basic</button>
+            <button class="mode-btn" onclick="setMode('scientific')">Scientific</button>
+            <button class="mode-btn" onclick="setMode('equations')">Equations</button>
+        </div>
+
+        <div class="display" id="display">0</div>
+
+        <div class="scientific-buttons" id="scientificButtons">
+            <button class="btn" onclick="addFunction('sin(')">sin</button>
+            <button class="btn" onclick="addFunction('cos(')">cos</button>
+            <button class="btn" onclick="addFunction('tan(')">tan</button>
+            <button class="btn" onclick="addFunction('log(')">log</button>
+            <button class="btn" onclick="addFunction('ln(')">ln</button>
+            <button class="btn" onclick="addFunction('sqrt(')">√</button>
+            <button class="btn" onclick="addToDisplay('^')">x^y</button>
+            <button class="btn" onclick="addToDisplay('Math.PI')">π</button>
+            <button class="btn" onclick="addToDisplay('Math.E')">e</button>
+            <button class="btn" onclick="addToDisplay('(')">(</button>
+        </div>
+
+        <div class="buttons">
+            <button class="btn clear" onclick="clearDisplay()">C</button>
+            <button class="btn" onclick="deleteLast()">⌫</button>
+            <button class="btn operator" onclick="addToDisplay('/')">/</button>
+            <button class="btn operator" onclick="addToDisplay('*')">×</button>
+            
+            <button class="btn" onclick="addToDisplay('7')">7</button>
+            <button class="btn" onclick="addToDisplay('8')">8</button>
+            <button class="btn" onclick="addToDisplay('9')">9</button>
+            <button class="btn operator" onclick="addToDisplay('-')">-</button>
+            
+            <button class="btn" onclick="addToDisplay('4')">4</button>
+            <button class="btn" onclick="addToDisplay('5')">5</button>
+            <button class="btn" onclick="addToDisplay('6')">6</button>
+            <button class="btn operator" onclick="addToDisplay('+')">+</button>
+            
+            <button class="btn" onclick="addToDisplay('1')">1</button>
+            <button class="btn" onclick="addToDisplay('2')">2</button>
+            <button class="btn" onclick="addToDisplay('3')">3</button>
+            <button class="btn" onclick="addToDisplay(')')">)</button>
+            
+            <button class="btn" onclick="addToDisplay('0')" style="grid-column: span 2;">0</button>
+            <button class="btn" onclick="addToDisplay('.')">.</button>
+            <button class="btn equals" onclick="calculate()">=</button>
+        </div>
+
+        <div class="equation-solver" id="equationSolver">
+            <h3 style="color: white; margin-bottom: 15px; text-align: center;">System of Linear Equations Solver</h3>
+            <input type="text" class="equation-input" id="eq1" placeholder="Enter first equation (e.g., 2x+y=10)">
+            <input type="text" class="equation-input" id="eq2" placeholder="Enter second equation (e.g., 10x-9y=90)">
+            <button class="solve-btn" onclick="solveEquations()">Solve for x and y</button>
+            <div class="result" id="equationResult" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let shouldResetDisplay = false;
+        let currentMode = 'basic';
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.mode-toggle');
+            if (document.body.classList.contains('dark')) {
+                toggle.textContent = '☀️ Light Mode';
+            } else {
+                toggle.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const scientificButtons = document.getElementById('scientificButtons');
+            const equationSolver = document.getElementById('equationSolver');
+
+            scientificButtons.classList.remove('show');
+            equationSolver.classList.remove('show');
+
+            if (mode === 'scientific') {
+                scientificButtons.classList.add('show');
+            } else if (mode === 'equations') {
+                equationSolver.classList.add('show');
+            }
+        }
+
+        function addToDisplay(value) {
+            const display = document.getElementById('display');
+            
+            if (shouldResetDisplay) {
+                currentInput = '';
+                shouldResetDisplay = false;
+            }
+            
+            if (currentInput === '0' && value !== '.') {
+                currentInput = value;
+            } else {
+                currentInput += value;
+            }
+            
+            display.textContent = currentInput.replace(/\*/g, '×');
+            animateButton(event.target);
+        }
+
+        function addFunction(func) {
+            addToDisplay(func);
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            document.getElementById('display').textContent = '0';
+            animateButton(event.target);
+        }
+
+        function deleteLast() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            document.getElementById('display').textContent = currentInput.replace(/\*/g, '×');
+            animateButton(event.target);
+        }
+
+        function calculate() {
+            const display = document.getElementById('display');
+            display.classList.add('calculating');
+            
+            setTimeout(() => {
+                try {
+                    let expression = currentInput
+                        .replace(/\^/g, '**')
+                        .replace(/sin/g, 'Math.sin')
+                        .replace(/cos/g, 'Math.cos')
+                        .replace(/tan/g, 'Math.tan')
+                        .replace(/log/g, 'Math.log10')
+                        .replace(/ln/g, 'Math.log')
+                        .replace(/sqrt/g, 'Math.sqrt');
+                    
+                    const result = eval(expression);
+                    currentInput = result.toString();
+                    display.textContent = parseFloat(result.toFixed(10)).toString();
+                    shouldResetDisplay = true;
+                } catch (error) {
+                    display.textContent = 'Error';
+                    currentInput = '0';
+                    shouldResetDisplay = true;
+                }
+                display.classList.remove('calculating');
+            }, 500);
+            
+            animateButton(event.target);
+        }
+
+        function animateButton(button) {
+            button.classList.add('animate');
+            setTimeout(() => button.classList.remove('animate'), 300);
+        }
+
+        function solveEquations() {
+            const eq1 = document.getElementById('eq1').value.trim();
+            const eq2 = document.getElementById('eq2').value.trim();
+            const resultDiv = document.getElementById('equationResult');
+
+            if (!eq1 || !eq2) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Please enter both equations';
+                return;
+            }
+
+            try {
+                // Parse equations like "2x+y=10" and "10x-9y=90"
+                const parseEquation = (eq) => {
+                    const [left, right] = eq.split('=');
+                    const rightValue = parseFloat(right);
+                    
+                    // Extract coefficients for x and y
+                    let xCoeff = 0, yCoeff = 0;
+                    
+                    // Handle x coefficient
+                    const xMatch = left.match(/([+-]?\d*\.?\d*)x/);
+                    if (xMatch) {
+                        xCoeff = xMatch[1] === '' || xMatch[1] === '+' ? 1 : 
+                                xMatch[1] === '-' ? -1 : parseFloat(xMatch[1]);
+                    }
+                    
+                    // Handle y coefficient
+                    const yMatch = left.match(/([+-]?\d*\.?\d*)y/);
+                    if (yMatch) {
+                        yCoeff = yMatch[1] === '' || yMatch[1] === '+' ? 1 : 
+                                yMatch[1] === '-' ? -1 : parseFloat(yMatch[1]);
+                    }
+                    
+                    return { xCoeff, yCoeff, result: rightValue };
+                };
+
+                const eq1Parsed = parseEquation(eq1);
+                const eq2Parsed = parseEquation(eq2);
+
+                // Solve using Cramer's rule
+                const a1 = eq1Parsed.xCoeff, b1 = eq1Parsed.yCoeff, c1 = eq1Parsed.result;
+                const a2 = eq2Parsed.xCoeff, b2 = eq2Parsed.yCoeff, c2 = eq2Parsed.result;
+
+                const determinant = a1 * b2 - a2 * b1;
+
+                if (determinant === 0) {
+                    resultDiv.innerHTML = '❌ No unique solution (equations are parallel or identical)';
+                } else {
+                    const x = (c1 * b2 - c2 * b1) / determinant;
+                    const y = (a1 * c2 - a2 * c1) / determinant;
+
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Solution Found!</strong><br>
+                        x = ${parseFloat(x.toFixed(6))}<br>
+                        y = ${parseFloat(y.toFixed(6))}
+                    `;
+                }
+
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '❌ Error parsing equations. Please use format like "2x+y=10"';
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (currentMode === 'equations') return;
+            
+            const key = e.key;
+            if ('0123456789'.includes(key)) {
+                addToDisplay(key);
+            } else if ('+-*/'.includes(key)) {
+                addToDisplay(key === '*' ? '*' : key);
+            } else if (key === 'Enter' || key === '=') {
+                calculate();
+            } else if (key === 'Escape' || key === 'c' || key === 'C') {
+                clearDisplay();
+            } else if (key === 'Backspace') {
+                deleteLast();
+            } else if (key === '.') {
+                addToDisplay('.');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b8a449217cc8fc',t:'MTc1NDU4OTI5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
